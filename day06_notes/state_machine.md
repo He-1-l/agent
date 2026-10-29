@@ -12,15 +12,13 @@
 
 ## 状态转换
 
-‘’‘
- 0 --reserve()--> 1 --checkin() --> 2 
- 0 --cancel()--> 3
- 0 --expire_no_show()-->4 --admin.py --> 3
-‘’‘
+'''
+0 --reserve()--> 1 --checkin() --> 2  
+0 --cancel()--> 3  
+0 --expire_no_show()-->4 --admin.py --> 3  
+'''
 
 ### 终态：2(已完成)和3(已取消)
-
-
 
 # 三个缺陷
 
