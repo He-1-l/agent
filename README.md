@@ -3,7 +3,21 @@
 > 从零开始学习大模型应用开发的学习记录与实践代码。
 > 涵盖 LLM 调用、工具调用、对话记忆、RAG 检索增强、Rerank 重排。
 
-**当前进度：Day 1 - Day 3 已完成**
+**当前进度：Day 1 - Day 3 学习完成，另含手写练习与笔记**
+
+---
+
+## 代码来源说明（重要）
+
+本仓库的代码分为三类，性质不同，混在一起看容易误判：
+
+| 目录 | 代码来源 | 说明 |
+|---|---|---|
+| `day01/` `day02/` `day03/` `day04*/` | **参考课程材料编写** | 跟随教程完成的练习，用于理解 LLM 应用的核心流程（RAG、工具调用、Rerank）。本人完成了运行、调试、参数调优与效果评估 |
+| **`day05_practice/`** | **✅ 全部本人从零手写** | 不参考任何现成代码，独立实现的练习程序。每个函数都能逐行解释 |
+| **`day06_notes/`** | **✅ 本人手写笔记** | 阅读后端项目源码后整理的设计笔记 |
+
+**如果你只想看我自己写的东西，直接看 `day05_practice/`。**
 
 ---
 
@@ -29,6 +43,24 @@ agent/
 │   ├── 02_rag_rerank_qa.py     RAG + Rerank 完整版 + A/B 对比
 │   ├── 03_evaluate.py          召回质量评估（小知识库）
 │   └── 04_evaluate_large.py    召回质量评估（大知识库）
+│
+├── day04/                  Streamlit 界面（完整版）
+├── day04-learn/            Streamlit 界面（从零教学的 step1-4）
+│
+├── day05_practice/         ⭐ 本人手写练习
+│   ├── anti_oversell.py        三层防超卖模拟（Redis + 数据库 + 回滚）
+│   ├── oversell_demo.py        无约束下的超卖演示（10 座 50 请求 → 超卖 40）
+│   ├── oversell_fixed.py       加检查后超卖为 0 的对照
+│   ├── expire_demo.py          超时未签到自动释放逻辑
+│   └── booking_system.py       简化版预约系统（98 行，5 个函数）
+│       ├── reserve()           4 层校验：座位号 / 信用分 / 每日上限 / 座位占用
+│       ├── cancel()            释放座位 + 扣信用分
+│       ├── checkin()           签到（幂等）
+│       ├── auto_checkout()     超时自动签退（幂等）
+│       └── show_status()       状态展示
+│
+├── day06_notes/            ⭐ 本人手写笔记
+│   └── state_machine.md        预约状态机：5 个状态、流转规则、4 处设计缺陷
 │
 ├── GIT教程.md              Git 入门笔记
 └── .gitignore              排除 .env 与临时文件
@@ -227,11 +259,27 @@ DASHSCOPE_API_KEY=sk-xxxxxxxx
 
 ## 待办
 
-- [ ] 为 RAG 系统添加 Streamlit 可视化界面
+- [x] 为 RAG 系统添加 Streamlit 可视化界面 ✅（`day04/`）
 - [ ] 支持 PDF 文档上传
 - [ ] 尝试混合检索（向量 + BM25 关键词）
 - [ ] Query 改写优化
-- [ ] Agent 项目（工具调用 + 多步推理）
+- [ ] 手写一个完整的 Tool-Calling Agent 项目
+
+---
+
+## 关于手写练习（day05_practice）
+
+`day05_practice/` 里的代码不参考任何现成实现，是我在理解了一个后端预约系统的源码之后，
+从最基础的字典和函数开始，自己一行行写出来的。
+
+写的过程中犯过很多错，比如：
+
+- `waitlist[seat_id] = waitlist.get(seat_id, 1) + 1` —— 把队列写成了计数器
+- `student_count` 只做了检查、忘了写入，导致「每日上限」检查永远不生效
+- 变量名 `studnet_id` 拼错，报 `NameError`
+- 状态值一个地方写 `"待签到"`、另一个地方写 `"0"`，对不上
+
+这些错误都保留在 git 提交历史里，可以看到逐步修正的过程。
 
 ---
 
@@ -240,3 +288,5 @@ DASHSCOPE_API_KEY=sk-xxxxxxxx
 本项目为个人学习实践，参考了线上课程的内容框架，
 代码在学习过程中逐步理解、调试、修改，
 踩坑记录均为实际遇到并解决的问题。
+
+`day05_practice/` 与 `day06_notes/` 为完全本人手写，未参考现成实现。
