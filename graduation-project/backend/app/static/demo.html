@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>高校自习室座位预约系统 · 演示</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    background: #f5f7fa; color: #333;
+  }
+  header {
+    background: #1f3a5f; color: #fff; padding: 14px 24px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  header h1 { font-size: 18px; margin: 0; font-weight: 700; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #8a8a8a; display: inline-block; }
+  .dot.on { background: #4caf50; }
+  .spacer { flex: 1; }
+  .chip {
+    font-size: 12px; padding: 3px 10px; border-radius: 12px;
+    background: rgba(255,255,255,.15);
+  }
+  main { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+  .card {
+    background: #fff; border-radius: 10px; padding: 20px 22px;
+    box-shadow: 0 1px 4px rgba(31,58,95,.08); margin-bottom: 18px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: #1f3a5f; font-weight: 700; }
+  label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; }
+  input, select {
+    width: 100%; padding: 9px 10px; border: 1px solid #dcdfe6; border-radius: 6px;
+    font-size: 14px; outline: none; background: #fff;
+  }
+  input:focus, select:focus { border-color: #3f6ea8; }
+  button {
+    padding: 9px 18px; border: none; border-radius: 6px; background: #1f3a5f;
+    color: #fff; font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+  button:hover { background: #2c4f7c; }
+  button.ghost { background: #eef2f7; color: #1f3a5f; }
+  button.ghost:hover { background: #e0e8f2; }
+  button:disabled { background: #b9c4d0; cursor: not-allowed; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 140px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab {
+    padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px;
+    background: #eef2f7; color: #556;
+  }
+  .tab.active { background: #1f3a5f; color: #fff; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: #666; margin: 4px 0 14px; }
+  .legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 4px; vertical-align: -1px; }
+  .grid { display: grid; gap: 9px; }
+  .seat {
+    height: 50px; border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; cursor: pointer; user-select: none;
+    border: 1px solid transparent; transition: transform .1s;
+  }
+  .seat:hover { transform: translateY(-2px); }
+  .free { background: #c8e6c9; border-color: #81c784; color: #256029; }
+  .taken { background: #ffcdd2; border-color: #e57373; color: #a33; cursor: not-allowed; }
+  .mine { background: #ffe082; border-color: #ffb300; color: #7a5b00; }
+  .broken { background: #e0e0e0; border-color: #bdbdbd; color: #888; cursor: not-allowed; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 8px; border-bottom: 1px solid #eef1f5; text-align: left; }
+  th { color: #667; font-weight: 600; font-size: 12px; background: #fafbfd; }
+  .tag { padding: 2px 9px; border-radius: 10px; font-size: 12px; }
+  .t0 { background: #fff4e5; color: #b26a00; }
+  .t1 { background: #e7f6ea; color: #256029; }
+  .t2 { background: #eef1f5; color: #556; }
+  .t3 { background: #eef1f5; color: #99a; }
+  .t4 { background: #fdecea; color: #b3261e; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi { background: #fff; border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 1px 4px rgba(31,58,95,.08); }
+  .kpi .n { font-size: 26px; font-weight: 700; color: #1f3a5f; }
+  .kpi .n.red { color: #d9534f; }
+  .kpi .c { font-size: 12px; color: #889; margin-top: 4px; }
+  .bars { display: flex; align-items: flex-end; gap: 18px; height: 200px; padding: 10px 4px 0; border-bottom: 1px solid #e4e8ee; }
+  .barwrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bar { width: 60%; max-width: 46px; background: linear-gradient(180deg, #4a7fbd, #1f3a5f); border-radius: 4px 4px 0 0; min-height: 2px; transition: height .4s; }
+  .barlab { font-size: 11px; color: #789; }
+  .barval { font-size: 11px; color: #1f3a5f; font-weight: 700; }
+  #toast {
+    position: fixed; left: 50%; top: 24px; transform: translateX(-50%);
+    background: #1f3a5f; color: #fff; padding: 10px 22px; border-radius: 8px;
+    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 99;
+  }
+  #toast.show { opacity: 1; }
+  #toast.err { background: #c0392b; }
+  .hint { font-size: 12px; color: #909aa6; margin-top: 10px; line-height: 1.7; }
+  .hidden { display: none !important; }
+  .muted { color: #889; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="dot" id="wsdot"></span>
+  <h1>高校自习室座位预约系统</h1>
+  <span class="spacer"></span>
+  <span class="chip" id="who">未登录</span>
+  <button class="ghost hidden" id="btnLogout" style="padding:5px 14px">退出</button>
+</header>
+
+<main>
+
+  <!-- ============ 登录 ============ -->
+  <div id="viewLogin">
+    <div class="card" style="max-width:420px;margin:40px auto">
+      <div class="tabs">
+        <div class="tab active" data-role="student">学生登录</div>
+        <div class="tab" data-role="admin">管理员登录</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label id="lblUser">学号</label>
+        <input id="inUser" placeholder="2022010101" />
+      </div>
+      <div style="margin-bottom:18px">
+        <label>密码</label>
+        <input id="inPass" type="password" placeholder="123456" />
+      </div>
+      <button id="btnLogin" style="width:100%">登 录</button>
+      <div class="hint">
+        演示账号：学生 <b>2022010101</b> / <b>123456</b><br />
+        管理员 <b>admin</b> / <b>123456</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 学生端 ============ -->
+  <div id="viewStudent" class="hidden">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>场馆</label>
+          <select id="selBuilding"></select>
+        </div>
+        <div>
+          <label>自习室</label>
+          <select id="selRoom"></select>
+        </div>
+        <div>
+          <label>日期</label>
+          <select id="selDate"></select>
+        </div>
+        <div>
+          <label>时段</label>
+          <select id="selSlot"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="roomTitle">座位平面图</h2>
+      <div class="legend">
+        <span><i class="free"></i>空闲（点一下就能约）</span>
+        <span><i class="mine"></i>我约的</span>
+        <span><i class="taken"></i>已被别人约</span>
+        <span><i class="broken"></i>维修中</span>
+      </div>
+      <div class="grid" id="seatGrid"></div>
+      <div class="hint" id="seatHint"></div>
+    </div>
+
+    <div class="card">
+      <h2>我的预约</h2>
+      <table>
+        <thead>
+          <tr><th>日期</th><th>时段</th><th>自习室</th><th>座位</th><th>状态</th><th>操作</th></tr>
+        </thead>
+        <tbody id="mineBody"></tbody>
+      </table>
+      <div class="hint" id="mineHint"></div>
+    </div>
+  </div>
+
+  <!-- ============ 管理端 ============ -->
+  <div id="viewAdmin" class="hidden">
+    <div class="kpis">
+      <div class="kpi"><div class="n" id="kTotal">0</div><div class="c">今日预约总数</div></div>
+      <div class="kpi"><div class="n" id="kActive">0</div><div class="c">当前有效占用</div></div>
+      <div class="kpi"><div class="n" id="kRate">0%</div><div class="c">整体使用率</div></div>
+      <div class="kpi"><div class="n red" id="kNoShow">0</div><div class="c">今日违约数</div></div>
+    </div>
+
+    <div class="card">
+      <h2>各自习室总体使用率</h2>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="card">
+      <h2>今日预约明细</h2>
+      <table>
+        <thead>
+          <tr><th>编号</th><th>学生</th><th>自习室</th><th>座位</th><th>时段</th><th>状态</th></tr>
+        </thead>
+        <tbody id="adminBody"></tbody>
+      </table>
+      <div class="hint" id="adminHint"></div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var state = {
+    role: null,
+    token: localStorage.getItem("demo_token") || "",
+    name: localStorage.getItem("demo_name") || "",
+    buildings: [], rooms: [], slots: [],
+    room: null, seats: [], mine: [],
+    ws: null
+  };
+
+  // ---------------- 小工具 ----------------
+  function $(id) { return document.getElementById(id); }
+
+  function toast(msg, isErr) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.className = "show" + (isErr ? " err" : "");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.className = ""; }, 2600);
+  }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = { "Content-Type": "application/json" };
+    if (state.token) headers.Authorization = "Bearer " + state.token;
+    return fetch("/api" + path, {
+      method: opts.method || "GET",
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) {
+          var msg = data && data.detail ? data.detail : ("请求失败 " + r.status);
+          if (typeof msg !== "string") msg = JSON.stringify(msg);
+          throw new Error(msg);
+        }
+        return data;
+      });
+    });
+  }
+
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function tomorrow() {
+    var d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  // ---------------- 登录 ----------------
+  var loginRole = "student";
+
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (el) {
+    el.addEventListener("click", function () {
+      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) {
+        x.classList.remove("active");
+      });
+      el.classList.add("active");
+      loginRole = el.getAttribute("data-role");
+      $("lblUser").textContent = loginRole === "admin" ? "管理员账号" : "学号";
+      $("inUser").placeholder = loginRole === "admin" ? "admin" : "2022010101";
+      $("inUser").value = "";
+      $("inPass").value = "";
+    });
+  });
+
+  $("btnLogin").addEventListener("click", function () {
+    var user = $("inUser").value.trim();
+    var pass = $("inPass").value;
+    if (!user || !pass) { toast("请填写账号和密码", true); return; }
+
+    var path = loginRole === "admin" ? "/auth/admin/login" : "/auth/login";
+    $("btnLogin").disabled = true;
+    api(path, { method: "POST", body: { student_no: user, password: pass } })
+      .then(function (d) {
+        state.token = d.access_token;
+        state.role = d.role;
+        state.name = d.name || "";
+        localStorage.setItem("demo_token", state.token);
+        localStorage.setItem("demo_name", state.name);
+        localStorage.setItem("demo_role", state.role);
+        toast("登录成功");
+        enter();
+      })
+      .catch(function (e) { toast(e.message, true); })
+      .then(function () { $("btnLogin").disabled = false; });
+  });
+
+  $("btnLogout").addEventListener("click", function () {
+    state.token = ""; state.role = null;
+    localStorage.removeItem("demo_token");
+    localStorage.removeItem("demo_role");
+    localStorage.removeItem("demo_name");
+    if (state.ws) { try { state.ws.close(); } catch (e) {} }
+    $("who").textContent = "未登录";
+    $("btnLogout").classList.add("hidden");
+    $("viewStudent").classList.add("hidden");
+    $("viewAdmin").classList.add("hidden");
+    $("viewLogin").classList.remove("hidden");
+  });
+
+  // ---------------- 进入系统 ----------------
+  function enter() {
+    $("viewLogin").classList.add("hidden");
+    $("who").textContent = (state.role === "admin" ? "管理员 " : "") + (state.name || "已登录");
+    $("btnLogout").classList.remove("hidden");
+
+    if (state.role === "admin") {
+      $("viewStudent").classList.add("hidden");
+      $("viewAdmin").classList.remove("hidden");
+      loadAdmin();
+    } else {
+      $("viewAdmin").classList.add("hidden");
+      $("viewStudent").classList.remove("hidden");
+      loadStudentBase();
+    }
+  }
+
+  // ---------------- 学生端 ----------------
+  function loadStudentBase() {
+    Promise.all([api("/buildings"), api("/slots")])
+      .then(function (res) {
+        state.buildings = res[0];
+        state.slots = res[1];
+
+        var sb = $("selBuilding");
+        sb.innerHTML = "";
+        state.buildings.forEach(function (b) {
+          var o = document.createElement("option");
+          o.value = b.id; o.textContent = b.name;
+          sb.appendChild(o);
+        });
+
+        var sd = $("selDate");
+        sd.innerHTML = "";
+        [[today(), "今天"], [tomorrow(), "明天"]].forEach(function (p) {
+          var o = document.createElement("option");
+          o.value = p[0]; o.textContent = p[0] + "（" + p[1] + "）";
+          sd.appendChild(o);
+        });
+
+        var ss = $("selSlot");
+        ss.innerHTML = "";
+        state.slots.forEach(function (s) {
+          var o = document.createElement("option");
+          o.value = s.id;
+          o.textContent = s.start_time.slice(0, 5) + " - " + s.end_time.slice(0, 5);
+          ss.appendChild(o);
+        });
+
+        return loadRooms();
+      })
+      .catch(function (e) { toast(e.message, true); });
+  }
+
+  function loadRooms() {
+    return api("/rooms?building_id=" + $("selBuilding").value).then(function (rooms) {
+      state.rooms = rooms;
+      var sr = $("selRoom");
+      sr.innerHTML = "";
+      rooms.forEach(function (r) {
+        var o = document.createElement("option");
+        o.value = r.id; o.textContent = r.name;
+        sr.appendChild(o);
+      });
+      return loadSeats();
+    });
+  }
+
+  function loadSeats() {
+    var roomId = $("selRoom").value;
+    var date = $("selDate").value;
+    var slot = $("selSlot").value;
+
+    return Promise.all([
+      api("/rooms/" + roomId + "/seats?reserve_date=" + date + "&slot_id=" + slot),
+      api("/reservations/mine")
+    ]).then(function (res) {
+      var data = res[0];
+      state.room = data.room;
+      state.seats = data.seats;
+      state.mine = res[1];
+      renderSeats();
+      renderMine();
+      connectWs(roomId);
+    }).catch(function (e) { toast(e.message, true); });
+  }
+
+  function mySeatSet() {
+    var s = {};
+    var date = $("selDate").value;
+    var slot = $("selSlot").value;
+    state.mine.forEach(function (r) {
+      if ((r.status === 0 || r.status === 1) &&
+          String(r.reserve_date) === date && String(r.slot_id) === String(slot)) {
+        s[r.seat_id] = r.id;
+      }
+    });
+    return s;
+  }
+
+  function renderSeats() {
+    var grid = $("seatGrid");
+    grid.innerHTML = "";
+    if (!state.room) return;
+
+    grid.style.gridTemplateColumns = "repeat(" + state.room.col_count + ", 1fr)";
+    $("roomTitle").textContent = state.room.name + " · 座位平面图";
+
+    var mineMap = mySeatSet();
+    var free = 0;
+
+    state.seats.forEach(function (seat) {
+      var div = document.createElement("div");
+      div.className = "seat";
+      div.textContent = seat.seat_no;
+
+      if (seat.state === "maintenance") {
+        div.className += " broken";
+      } else if (mineMap[seat.id]) {
+        div.className += " mine";
+        div.title = "这是我约的座位";
+      } else if (seat.state === "reserved") {
+        div.className += " taken";
+        div.title = "已被他人预约";
+      } else {
+        div.className += " free";
+        free++;
+        div.addEventListener("click", function () { reserve(seat.id); });
+      }
+      grid.appendChild(div);
+    });
+
+    $("seatHint").textContent =
+      "共 " + state.seats.length + " 个座位，当前空闲 " + free + " 个。" +
+      "点绿色座位即可预约。";
+  }
+
+  function reserve(seatId) {
+    var body = {
+      seat_id: seatId,
+      reserve_date: $("selDate").value,
+      slot_id: Number($("selSlot").value)
+    };
+    api("/reservations", { method: "POST", body: body })
+      .then(function () {
+        toast("预约成功！记得按时签到");
+        return loadSeats();
+      })
+      .catch(function (e) { toast(e.message, true); });
+  }
+
+  var STATUS_TEXT = ["待签到", "已签到", "已完成", "已取消", "违约"];
+
+  function renderMine() {
+    var tb = $("mineBody");
+    tb.innerHTML = "";
+    var shown = 0;
+
+    state.mine.forEach(function (r) {
+      if (shown >= 8) return;
+      shown++;
+      var tr = document.createElement("tr");
+
+      var td1 = document.createElement("td"); td1.textContent = r.reserve_date;
+      var td2 = document.createElement("td"); td2.textContent = r.slot_name;
+      var td3 = document.createElement("td"); td3.textContent = r.room_name;
+      var td4 = document.createElement("td"); td4.textContent = r.seat_no;
+
+      var td5 = document.createElement("td");
+      var tag = document.createElement("span");
+      tag.className = "tag t" + r.status;
+      tag.textContent = STATUS_TEXT[r.status] || "未知";
+      td5.appendChild(tag);
+
+      var td6 = document.createElement("td");
+      if (r.status === 0) {
+        td6.appendChild(mkBtn("签到", "primary", function () { act(r.id, "checkin"); }));
+        td6.appendChild(mkBtn("取消", "ghost", function () { act(r.id, "cancel"); }));
+      } else if (r.status === 1) {
+        td6.appendChild(mkBtn("签退", "primary", function () { act(r.id, "checkout"); }));
+      } else {
+        td6.innerHTML = '<span class="muted">—</span>';
+      }
+
+      [td1, td2, td3, td4, td5, td6].forEach(function (td) { tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+
+    if (!shown) {
+      tb.innerHTML = '<tr><td colspan="6" class="muted">还没有预约记录，去上面点一个绿色座位试试</td></tr>';
+    }
+    $("mineHint").textContent = "共 " + state.mine.length + " 条记录（最多显示最近 8 条）";
+  }
+
+  function mkBtn(text, kind, fn) {
+    var b = document.createElement("button");
+    b.textContent = text;
+    b.style.marginRight = "6px";
+    b.style.padding = "4px 12px";
+    b.style.fontSize = "12px";
+    if (kind === "ghost") b.className = "ghost";
+    b.addEventListener("click", fn);
+    return b;
+  }
+
+  function act(id, action) {
+    if (action === "cancel" && !confirm("确定取消这个预约吗？座位会释放给其他同学。")) return;
+    api("/reservations/" + id + "/" + action, { method: "POST" })
+      .then(function () {
+        toast(action === "checkin" ? "签到成功" :
+              action === "checkout" ? "已签退" : "已取消");
+        return loadSeats();
+      })
+      .catch(function (e) { toast(e.message, true); });
+  }
+
+  ["selBuilding", "selRoom", "selDate", "selSlot"].forEach(function (id) {
+    $(id).addEventListener("change", function () {
+      if (id === "selBuilding") loadRooms();
+      else loadSeats();
+    });
+  });
+
+  // ---------------- 实时推送 ----------------
+  function connectWs(roomId) {
+    if (state.ws) { try { state.ws.close(); } catch (e) {} state.ws = null; }
+    try {
+      var proto = location.protocol === "https:" ? "wss" : "ws";
+      var ws = new WebSocket(proto + "://" + location.host + "/ws/rooms/" + roomId);
+      state.ws = ws;
+      ws.onopen = function () { $("wsdot").className = "dot on"; };
+      ws.onclose = function () { $("wsdot").className = "dot"; };
+      ws.onerror = function () { $("wsdot").className = "dot"; };
+      ws.onmessage = function (ev) {
+        var msg;
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        if (!msg.seat_id) return;
+        state.seats.forEach(function (s) {
+          if (s.id === msg.seat_id) s.state = (msg.event === "released") ? "free" : "reserved";
+        });
+        renderSeats();
+      };
+    } catch (e) {
+      $("wsdot").className = "dot";
+    }
+  }
+
+  // ---------------- 管理端 ----------------
+  function loadAdmin() {
+    api("/admin/overview").then(function (d) {
+      $("kTotal").textContent = d.total_reservations;
+      $("kActive").textContent = d.active_reservations;
+      $("kRate").textContent = d.usage_rate + "%";
+      $("kNoShow").textContent = d.no_show;
+
+      // 按自习室汇总
+      var map = {};
+      d.rows.forEach(function (r) {
+        if (!map[r.room_name]) map[r.room_name] = { sum: 0, n: 0 };
+        map[r.room_name].sum += r.usage_rate;
+        map[r.room_name].n += 1;
+      });
+      var bars = $("bars");
+      bars.innerHTML = "";
+      Object.keys(map).forEach(function (name) {
+        var rate = Math.round(map[name].sum / map[name].n);
+        var wrap = document.createElement("div");
+        wrap.className = "barwrap";
+        wrap.innerHTML =
+          '<div class="barval">' + rate + '%</div>' +
+          '<div class="bar" style="height:' + Math.max(2, rate) + '%"></div>' +
+          '<div class="barlab">' + name + '</div>';
+        bars.appendChild(wrap);
+      });
+
+      if (d.cache_enabled) {
+        toast("提示：Redis 缓存已启用");
+      }
+    }).catch(function (e) { toast(e.message, true); });
+
+    api("/admin/reservations").then(function (list) {
+      var tb = $("adminBody");
+      tb.innerHTML = "";
+      list.slice(0, 12).forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + r.id + "</td>" +
+          "<td>" + r.student_name + "</td>" +
+          "<td>" + r.room_name + "</td>" +
+          "<td>" + r.seat_no + "</td>" +
+          "<td>" + r.slot_id + "</td>" +
+          '<td><span class="tag t' + r.status + '">' +
+          (STATUS_TEXT[r.status] || "未知") + "</span></td>";
+        tb.appendChild(tr);
+      });
+      if (!list.length) {
+        tb.innerHTML = '<tr><td colspan="6" class="muted">今天还没有预约记录</td></tr>';
+      }
+      $("adminHint").textContent = "共 " + list.length + " 条记录（最多显示 12 条）";
+    }).catch(function (e) { toast(e.message, true); });
+  }
+
+  // ---------------- 启动 ----------------
+  var savedRole = localStorage.getItem("demo_role");
+  if (state.token && savedRole) {
+    state.role = savedRole;
+    enter();
+  }
+})();
+</script>
+</body>
+</html>

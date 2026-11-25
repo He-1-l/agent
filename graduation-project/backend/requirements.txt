@@ -1,0 +1,17 @@
+# Backend dependencies for the study-room seat reservation system.
+# NOTE: keep this file ASCII-only. On Chinese Windows, pip reads the
+# requirements file with the local code page (cp936 / GBK) and crashes
+# with UnicodeDecodeError if the file contains UTF-8 Chinese text.
+
+fastapi>=0.110
+uvicorn[standard]>=0.27
+SQLAlchemy>=2.0
+pydantic>=2.5
+python-multipart>=0.0.9
+
+# Optional. Without a REDIS_URL the app automatically falls back to the
+# database-only path (the third layer of the anti-overselling design).
+redis>=5.0
+
+# Only needed when DATABASE_URL points to MySQL.
+PyMySQL>=1.1
