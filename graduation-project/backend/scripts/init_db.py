@@ -23,6 +23,11 @@ from app.security import hash_password  # noqa: E402
 
 DEFAULT_PASSWORD = "123456"
 
+# 压测账号数量。本地默认 500（够跑 500 并发），
+# 部署到免费平台时用环境变量降到 20，避免初始化时耗尽 CPU 额度。
+# 每个账号的密码哈希约耗 0.04 秒 CPU。
+BENCH_ACCOUNTS = int(os.getenv("BENCH_ACCOUNTS", "500"))
+
 
 def reset_database() -> None:
     print("[init] 删除全部表 ...")
@@ -89,8 +94,9 @@ def seed() -> None:
                        password_hash=hash_password(DEFAULT_PASSWORD),
                        credit_score=100, status=1))
 
-        # 压测账号：bench0001 ~ bench0500（密码同 123456）
-        for i in range(1, 501):
+        # 压测账号：bench0001 ~ bench0NNN（密码同 123456）
+        # 数量由环境变量 BENCH_ACCOUNTS 控制，默认 500，部署时设 20
+        for i in range(1, BENCH_ACCOUNTS + 1):
             db.add(Student(
                 student_no=f"bench{i:04d}", name=f"压测用户{i}",
                 college="计算机学院", major="计算机科学与技术",
@@ -107,6 +113,7 @@ def seed() -> None:
         db.commit()
         print(f"[init] 种子数据写入完成，管理员 admin/{DEFAULT_PASSWORD}，"
               f"演示学生 2022010101/{DEFAULT_PASSWORD}")
+        print(f"[init] 压测账号 {BENCH_ACCOUNTS} 个（bench0001 ~ bench{BENCH_ACCOUNTS:04d}）")
     finally:
         db.close()
 
