@@ -2,6 +2,12 @@
 """全局配置：全部通过环境变量覆盖，默认值保证零配置可跑。"""
 import os
 
+# 项目根目录（backend/），用于把相对路径固定下来。
+# 否则 SQLite 的 "./studyroom.db" 会跟着「启动时的工作目录」变：
+# 用 --app-dir 启动 uvicorn 时 CWD 可能不是 backend/，
+# 结果 init_db 建的库和运行时读的库是两个文件，表现为「初始化成功但页面没数据」。
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class Settings:
     APP_NAME = "高校自习室座位预约系统"
@@ -12,9 +18,12 @@ class Settings:
     ALGORITHM = "HS256"
     TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "1440"))
 
-    # 数据库：默认 SQLite，配 MySQL 时改成
+    # 数据库：默认 SQLite（固定在 backend/studyroom.db），配 MySQL 时改成
     # mysql+pymysql://user:pass@127.0.0.1:3306/study_room?charset=utf8mb4
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./studyroom.db")
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "sqlite:///" + os.path.join(BASE_DIR, "studyroom.db").replace("\\", "/"),
+    )
 
     # Redis：留空则不启用缓存层，系统自动降级为数据库乐观锁
     REDIS_URL = os.getenv("REDIS_URL", "")
