@@ -2,7 +2,6 @@
 """应用入口：FastAPI 实例、路由注册、启动初始化、后台清理任务。"""
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -12,6 +11,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from . import services
 from .cache import cache
 from .config import settings
+from .timeutil import now_bj
 from .db import SessionLocal, init_db
 from .routers import admin, auth, reservations, rooms, ws
 
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
                 try:
                     n = services.expire_no_show(db)
                     if n:
-                        print(f"[cleaner] 释放超时座位 {n} 个 @ {datetime.now():%H:%M:%S}")
+                        print(f"[cleaner] 释放超时座位 {n} 个 @ {now_bj():%H:%M:%S}")
                 finally:
                     db.close()
             except asyncio.CancelledError:
@@ -88,5 +88,5 @@ def health():
         "app": settings.APP_NAME,
         "version": settings.VERSION,
         "cache": "redis" if cache.available else "degraded",
-        "time": datetime.now().isoformat(timespec="seconds"),
+        "time": now_bj().isoformat(timespec="seconds"),
     }

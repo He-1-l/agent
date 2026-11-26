@@ -17,6 +17,7 @@ from ..schemas import (
     CreditAdjustIn, CreditLogOut, OverviewOut, PunishRecordOut, RoomOut,
     StudentOut, UsageRow,
 )
+from ..timeutil import today_bj
 
 router = APIRouter(prefix="/api/admin", tags=["管理端"])
 
@@ -27,7 +28,7 @@ def _slot_name(slot: TimeSlot) -> str:
 
 @router.get("/overview", response_model=OverviewOut, summary="监控大屏概览")
 def overview(
-    stat_date: date = Query(default_factory=date.today),
+    stat_date: date = Query(default_factory=today_bj),
     _: Admin = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -81,7 +82,7 @@ def overview(
 
 @router.get("/reservations", summary="预约记录查询")
 def list_reservations(
-    stat_date: date = Query(default_factory=date.today),
+    stat_date: date = Query(default_factory=today_bj),
     limit: int = Query(default=200, le=1000),
     _: Admin = Depends(get_current_admin),
     db: Session = Depends(get_db),
@@ -316,7 +317,7 @@ def student_credit_logs(
             summary="管理端座位占用详情（含占用者信息）")
 def admin_room_seat_map(
     room_id: int,
-    reserve_date: date = Query(default_factory=date.today),
+    reserve_date: date = Query(default_factory=today_bj),
     slot_id: int = Query(default=1),
     _: Admin = Depends(get_current_admin),
     db: Session = Depends(get_db),

@@ -28,10 +28,17 @@ import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Tuple
 
 DEFAULT_PASSWORD = "123456"
+
+# 北京时间固定 UTC+8，压测的"今天"也按北京时间算
+_BEIJING_TZ = timezone(timedelta(hours=8), name="Asia/Shanghai")
+
+
+def _today_bj() -> date:
+    return datetime.now(_BEIJING_TZ).date()
 
 
 # ----------------------------------------------------------------------
@@ -207,7 +214,7 @@ def run_http(base: str, mode: str, users: int, seats: int,
     code, health = get_json(f"{base}/api/health")
     seat_map: List[int] = []
     code, data = get_json(
-        f"{base}/api/rooms/{room_id}/seats?reserve_date={date.today().isoformat()}"
+        f"{base}/api/rooms/{room_id}/seats?reserve_date={_today_bj().isoformat()}"
         f"&slot_id={slot_id}", token=tokens[0])
     if code == 200:
         seat_map = [s["id"] for s in data.get("seats", []) if s["state"] != "maintenance"]
@@ -235,7 +242,7 @@ def run_http(base: str, mode: str, users: int, seats: int,
         t0 = time.perf_counter()
         code_, _ = post_json(
             f"{base}/api/reservations",
-            {"seat_id": seat_id, "reserve_date": date.today().isoformat(),
+            {"seat_id": seat_id, "reserve_date": _today_bj().isoformat(),
              "slot_id": slot_id},
             token=token, headers={"X-Lock-Mode": mode},
         )

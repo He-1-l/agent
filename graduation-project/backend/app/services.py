@@ -21,6 +21,7 @@ from .config import settings
 from .models import (
     CheckinRecord, CreditLog, Reservation, Seat, Student, TimeSlot, Waitlist,
 )
+from .timeutil import now_bj, today_bj
 
 
 # ----------------------------------------------------------------------
@@ -73,7 +74,7 @@ def reserve(db: Session, student: Student, seat_id: int, d: date,
     if not seat or seat.status != 1:
         raise _bad("该座位不存在或维修中")
 
-    today = date.today()
+    today = today_bj()
     if d < today or d > today + timedelta(days=1):
         raise _bad("仅可预约今天与明天的座位")
 
@@ -84,7 +85,7 @@ def reserve(db: Session, student: Student, seat_id: int, d: date,
     #   1) 时段还没结束，且距结束至少 MIN_REMAINING_MINUTES 分钟；
     #   2) 签到截止时间从「现在」重新计算，不能沿用时段开始时间，
     #      否则中途抢到的座位会立刻被判违约。
-    now = datetime.now()
+    now = now_bj()
     slot_start = datetime.combine(d, slot.start_time)
     slot_end = datetime.combine(d, slot.end_time)
 
@@ -207,7 +208,7 @@ def checkin(db: Session, student: Student, reservation_id: int) -> Reservation:
         return res
     if res.status != 0:
         raise _bad("该预约不可签到")
-    now = datetime.now()
+    now = now_bj()
     if res.checkin_deadline and now > res.checkin_deadline:
         raise _bad("已超过签到时限，座位已被释放")
 
@@ -225,7 +226,7 @@ def checkout(db: Session, student: Student, reservation_id: int) -> Reservation:
     if res.status != 1:
         raise _bad("尚未签到，无法签退")
 
-    now = datetime.now()
+    now = now_bj()
     rec = db.execute(
         select(CheckinRecord).where(CheckinRecord.reservation_id == res.id)
     ).scalar_one_or_none()
@@ -246,7 +247,7 @@ def checkout(db: Session, student: Student, reservation_id: int) -> Reservation:
 # 超时未签到：由后台任务定期调用
 # ----------------------------------------------------------------------
 def expire_no_show(db: Session) -> int:
-    now = datetime.now()
+    now = now_bj()
     rows = db.execute(
         select(Reservation).where(
             Reservation.status == 0,

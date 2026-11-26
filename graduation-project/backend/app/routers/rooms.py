@@ -11,6 +11,7 @@ from ..db import get_db
 from ..deps import get_current_student
 from ..models import Building, Reservation, Room, Seat, Student, TimeSlot
 from ..schemas import BuildingOut, RoomOut, RoomSeatMap, SeatState, SlotOut
+from ..timeutil import today_bj
 
 router = APIRouter(prefix="/api", tags=["资源"])
 
@@ -43,7 +44,7 @@ def list_slots(db: Session = Depends(get_db)):
 @router.get("/rooms/{room_id}/seats", response_model=RoomSeatMap, summary="座位平面图")
 def room_seat_map(
     room_id: int,
-    reserve_date: date = Query(default_factory=date.today),
+    reserve_date: date = Query(default_factory=today_bj),
     slot_id: int = Query(default=1),
     _: Student = Depends(get_current_student),
     db: Session = Depends(get_db),

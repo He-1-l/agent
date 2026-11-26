@@ -9,6 +9,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from .db import Base
+from .timeutil import now_bj, today_bj
 
 
 class Student(Base):
@@ -24,7 +25,7 @@ class Student(Base):
     password_hash = Column(String(200), nullable=False)
     credit_score = Column(Integer, nullable=False, default=100)
     status = Column(Integer, nullable=False, default=1)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=now_bj)
 
 
 class Admin(Base):
@@ -36,7 +37,7 @@ class Admin(Base):
     real_name = Column(String(50))
     role = Column(String(20), default="ADMIN")
     status = Column(Integer, default=1)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=now_bj)
 
 
 class Building(Base):
@@ -113,12 +114,12 @@ class Reservation(Base):
     student_id = Column(Integer, ForeignKey("student.id"), nullable=False, index=True)
     room_id = Column(Integer, ForeignKey("room.id"), nullable=False, index=True)
     seat_id = Column(Integer, ForeignKey("seat.id"), nullable=False, index=True)
-    reserve_date = Column(Date, nullable=False, default=date.today)
+    reserve_date = Column(Date, nullable=False, default=today_bj)
     slot_id = Column(Integer, ForeignKey("time_slot.id"), nullable=False)
     status = Column(Integer, nullable=False, default=0)  # 0待签到 1已签到 2已完成 3已取消 4违约
     is_active = Column(Integer, nullable=True, default=1)
     checkin_deadline = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.now, index=True)
+    created_at = Column(DateTime, default=now_bj, index=True)
 
 
 class CheckinRecord(Base):
@@ -139,7 +140,7 @@ class CreditLog(Base):
     change_value = Column(Integer, nullable=False)
     reason = Column(String(200), nullable=False)
     reservation_id = Column(Integer)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=now_bj)
 
 
 class Waitlist(Base):
@@ -152,7 +153,7 @@ class Waitlist(Base):
     slot_id = Column(Integer, nullable=False)
     queue_no = Column(Integer, nullable=False)
     status = Column(Integer, default=0)  # 0排队 1已补位 2放弃 3过期
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=now_bj)
 
 
 class Announcement(Base):
@@ -163,4 +164,4 @@ class Announcement(Base):
     content = Column(Text, nullable=False)
     publisher_id = Column(Integer)
     status = Column(Integer, default=1)
-    publish_time = Column(DateTime, default=datetime.now)
+    publish_time = Column(DateTime, default=now_bj)
