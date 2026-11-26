@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
-    description="高校自习室座位预约系统 —— 毕业设计演示后端",
+    description="高校自习室座位预约系统 —— 后端服务",
     lifespan=lifespan,
 )
 

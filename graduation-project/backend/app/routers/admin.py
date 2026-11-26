@@ -151,7 +151,7 @@ def toggle_student(
     return {"ok": True, "student_id": student_id, "status": status}
 
 
-@router.get("/config", summary="当前运行配置（用于答辩演示降级）")
+@router.get("/config", summary="当前运行配置（用于演示缓存降级）")
 def current_config(_: Admin = Depends(get_current_admin)):
     return {
         "cache_enabled": cache.available,
